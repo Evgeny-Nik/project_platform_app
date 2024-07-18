@@ -1,0 +1,9 @@
+*
+
+!*.py
+!*.html
+!*.css
+!*.js
+!requirements.txt
+!version.txt
+!*/

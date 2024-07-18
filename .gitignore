@@ -1,0 +1,16 @@
+*
+
+!*/
+!app.py
+!*.html
+!*.css
+!.js
+!*.md
+!version.txt
+!requirements.txt
+!.gitignore
+!.dockerignore
+!Dockerfile
+.terraform
+__pycache__
+**test**

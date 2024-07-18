@@ -1,0 +1,75 @@
+
+        'name': daemonset.metadata.name,
+        'desired': daemonset.status.desired_number_scheduled or 0,
+        'current': daemonset.status.current_number_scheduled or 0,
+        'ready': daemonset.status.number_ready or 0,
+        'up_to_date': daemonset.status.updated_number_scheduled or 0,
+        'available': daemonset.status.number_available or 0,
+        'node_selector': node_selector_str,
+        'age': daemonset.metadata.creation_timestamp
+
+<!-- templates/macros.html -->
+{% macro render_kubernetes_resource(kind, items) %}
+    <h2>{{ kind }}</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead class="thead-light">
+                {% set columns = {
+                    'Pods': ['Name', 'Ready', 'Status', 'Restarts', 'Age'],
+                    'Services': ['Name', 'Type', 'Cluster IP', 'External IP', 'Ports', 'Age'],
+                    'Deployments': ['Name', 'Ready', 'Up-to-date', 'Available', 'Age'],
+                    'ReplicaSets': ['Name', 'Desired', 'Current', 'Ready', 'Age'],
+                    'DaemonSets': ['Name', 'Desired', 'Current', 'Ready', 'Up-To-Date', 'Available', 'Node-Selector','Age'],
+                    'StatefulSets': ['Name', 'Ready', 'Age'],
+                    'Ingresses': ['Name', 'Class', 'Hosts', 'Address', 'Ports', 'Age']
+                } %}
+                <tr>
+                    {% for column in columns[kind] %}
+                        <th>{{ column }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Iterate over items based on resource type -->
+                {% for item in items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        {% if kind == 'Pods' %}
+                            <td>{{ item.ready }}</td>
+                            <td>{{ item.status }}</td>
+                            <td>{{ item.restarts }}</td>
+                        {% elif kind == 'Services' %}
+                            <td>{{ item.type }}</td>
+                            <td>{{ item.cluster_ip }}</td>
+                            <td>{{ item.external_ip }}</td>
+                            <td>{{ item.ports }}</td>
+                        {% elif kind == 'Deployments' %}
+                            <td>{{ item.ready }}</td>
+                            <td>{{ item.up_to_date }}</td>
+                            <td>{{ item.available }}</td>
+                        {% elif kind == 'ReplicaSets' %}
+                            <td>{{ item.desired }}</td>
+                            <td>{{ item.current }}</td>
+                            <td>{{ item.ready }}</td>
+                        {% elif kind == 'StatefulSets' %}
+                            <td>{{ item.desired }}</td>
+                            <td>{{ item.current }}</td>
+                            <td>{{ item.ready }}</td>
+                            <td>{{ item.up_to_date }}</td>
+                            <td>{{ item.available }}</td>
+                            <td>{{ item.node_selector }}</td>
+                        {% elif kind == 'StatefulSets' %}
+                            <td>{{ item.ready }}</td>
+                        {% elif kind == 'Ingresses' %}
+                            <td>{{ item.class }}</td>
+                            <td>{{ item.hosts }}</td>
+                            <td>{{ item.address }}</td>
+                            <td>{{ item.ports }}</td>
+                        {% endif %}
+                        <td class="age">{{ item.age }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endmacro %}

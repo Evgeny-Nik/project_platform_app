@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1 class="text-center">Platform Application</h1>
+        </div>
+        <ul class="flash-messages">
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="card-title">Deploy Application</h2>
+                        <form id="deploy-form" action="/deploy" method="post">
+                            <div class="form-group">
+                                <label for="image_repository">Select Repository:</label>
+                                <select class="form-control" name="image_repository" id="image_repository">
+                                    <option value="" selected disabled>--Select a Docker Image--</option>
+                                    {% for repo_name, tags in images_cache.items() %}
+                                        <option value="{{ repo_name }}">{{ repo_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="image_tag">Select Tag:</label>
+                                <select class="form-control" name="image_tag" id="image_tag">
+                                    <!-- Tags will be dynamically loaded here based on selected repository -->
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="deploy_namespace">Namespace:</label>
+                                <input type="text" class="form-control" id="deploy_namespace" name="deploy_namespace" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Deploy</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="card-title">Delete Namespace</h2>
+                        <form action="/delete" method="post">
+                            <div class="form-group">
+                                <label for="namespace_delete">Select Namespace:</label>
+                                <select class="form-control" id="namespace_delete" name="namespace">
+                                    <option value="" selected disabled>--Select a Namespace--</option>
+                                    {% for ns in namespaces %}
+                                        <option value="{{ ns }}">{{ ns }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-danger">Delete Namespace</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="card-title">Describe Namespace</h2>
+                        <form id="describe-namespace" action="/describe" method="post">
+                            <div class="form-group">
+                                <label for="namespace_describe">Select Namespace:</label>
+                                <select class="form-control" id="namespace_describe" name="namespace">
+                                    <option value="" selected disabled>--Select a Namespace--</option>
+                                    {% for ns in namespaces %}
+                                        <option value="{{ ns }}">{{ ns }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Describe Namespace</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="namespace-resources">
+                    {% if kubernetes_data_cache and sel_namespace %}
+                        <h2 class="card-title">Namespace: {{ sel_namespace }}</h2>
+                        {% for kind, items in kubernetes_data_cache[sel_namespace].items() %}
+                            {% import 'macros.html' as macros %}
+                            <!-- Render based on resource type using the macro -->
+                            {{ macros.render_kubernetes_resource(kind, items) }}
+                        {% endfor %}
+                    {% else %}
+                        <p>Please select a namespace to view its details.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>
