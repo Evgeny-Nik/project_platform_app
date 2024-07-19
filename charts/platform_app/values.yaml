@@ -2,7 +2,7 @@ namespace: platform-app
 
 env:
   registryCreds: docker-hub-credentials
-  helmChart: https://github.com/Evgeny-Nik/test_repo/raw/main/helm-chart/platform-chart-0.1.0.tgz
+  helmChart: https://github.com/Evgeny-Nik/project_platform_app/raw/main/charts/deploying_chart/my-app-chart-1.0.0.tgz
   flaskSessionKey: your_secret_key
   redisHostUrl: my-redis-master.redis.svc.cluster.local
   redisHostPort: 6379
