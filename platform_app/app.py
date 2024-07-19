@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, url_for, redirect, flash, get_flashed_messages, session
+from flask_session import Session
 import json
 import subprocess
 import sys
@@ -11,6 +12,11 @@ import asyncio
 import aiohttp
 import time
 import requests
+import redis
+
+# Load environment variables from .env file
+load_dotenv()
+
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SESSION_KEY') # Set a secret key for session management
@@ -18,8 +24,25 @@ app.secret_key = os.getenv('SESSION_KEY') # Set a secret key for session managem
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-# Load environment variables from .env file
-load_dotenv()
+
+if "KUBERNETES_SERVICE_HOST" in os.environ:
+    # Running inside a Kubernetes cluster
+    app.config['SESSION_TYPE'] = 'redis'
+    app.config['SESSION_PERMANENT'] = False
+    app.config['SESSION_USE_SIGNER'] = True
+    app.config['SESSION_KEY_PREFIX'] = 'session:'
+    app.config['SESSION_REDIS'] = redis.StrictRedis(
+        host=os.getenv('REDIS_HOST_URL', 'localhost'), 
+        port=os.getenv('REDIS_HOST_PORT', 6379), 
+        db=0,
+        password=os.getenv('REDIS_HOST_PASSWORD', None)
+    )
+else:
+    # Configure the session to use filesystem
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.config['SESSION_FILE_DIR'] = '/tmp/flask_session/'
+    app.config['SESSION_PERMANENT'] = False
+Session(app)
 
 # Docker Hub username and access token
 DOCKER_HUB_USERNAME = os.getenv('DOCKER_HUB_USERNAME')
@@ -34,16 +57,31 @@ kubernetes_cache_timestamp = 0
 
 def load_kube_config():
     if "KUBERNETES_SERVICE_HOST" in os.environ:
+        print("loaded incluster config")
         config.load_incluster_config()
     else:
-        config.load_kube_config()
+        kubeconfig_path = os.getenv("KUBECONFIG")
+        if kubeconfig_path:
+            try:
+                logging.info(f"Loading kubeconfig from: {kubeconfig_path}")
+                config.load_kube_config(config_file=kubeconfig_path)
+                logging.info("Kubeconfig loaded successfully")
+            except Exception as e:
+                logging.error(f"Error loading kubeconfig: {e}")
+        else:
+            logging.warning("KUBECONFIG environment variable not set")
 
 
 async def fetch_image_tags(session, repo_name):
-    url = f'https://hub.docker.com/v2/repositories/{DOCKER_HUB_USERNAME}/{repo_name}/tags/'
     headers = {
-        'Authorization': f'Bearer {DOCKER_HUB_ACCESS_TOKEN}'
+        'Authorization': f'Bearer {DOCKER_HUB_ACCESS_TOKEN}',
+        'Accept': 'application/json'
     }
+     # Ensure no newline or carriage return characters in the headers
+    headers = {k: v.replace('\n', '').replace('\r', '') for k, v in headers.items()}
+
+    url = f"https://hub.docker.com/v2/repositories/{DOCKER_HUB_USERNAME}/{repo_name}/tags/"
+
     async with session.get(url, headers=headers) as response:
         if response.status == 200:
             data = await response.json()
@@ -107,20 +145,118 @@ def docker_image_tags(repo_name):
     return jsonify({repo_name: tags})
 
 
+def delete_application(namespace):
+    """Delete the Helm release in the specified namespace."""
+    release_name = f"my-app-{namespace}"
+    
+    try:
+        # Uninstall the Helm release
+        result = run_command(f"helm uninstall {release_name} --namespace {namespace}")
+        app.logger.info(f"Application in namespace '{namespace}' deleted.")
+    except subprocess.CalledProcessError as e:
+        # Handle specific errors from helm uninstall command
+        error_message = str(e.output) if e.output else str(e)
+        print(result.stdout.decode())  # Print stdout
+        print(result.stderr.decode())  # Print stderr
+        app.logger.error(f"Helm uninstall command failed: {error_message}")
+        raise  # Raise the exception to propagate it further
+    except Exception as e:
+        # Handle other unexpected exceptions
+        print(result.stdout.decode())  # Print stdout
+        print(result.stderr.decode())  # Print stderr
+        app.logger.error(f"An unexpected error occurred: {str(e)}")
+        raise  # Raise the exception to propagate it further
+
+
+def delete_namespace(namespace):
+    """Delete a Kubernetes namespace using the Kubernetes API."""
+    v1 = client.CoreV1Api()
+    try:
+        v1 = client.CoreV1Api()
+        v1.delete_namespace(name=namespace)
+        app.logger.info(f"Namespace '{namespace}' deleted.")
+    except client.exceptions.ApiException as e:
+        if e.status == 404:
+            app.logger.info(f"Namespace '{namespace}' not found for deletion.")
+        else:
+            app.logger.error(f"Failed to delete namespace '{namespace}': {str(e)}")
+            raise
+
+
+def delete_application_main(namespace):
+    """Delete the application using delete_app.py."""
+    load_kube_config()
+
+    if not namespace_exists(namespace):
+        app.logger.error(f"Namespace '{namespace}' does not exist.")
+        flash(f"Namespace '{namespace}' does not exist.")
+        return f"Namespace '{namespace}' does not exist."
+
+    try:
+        delete_application(namespace)
+        delete_namespace(namespace)
+        time.sleep(5)  # Wait for Kubernetes to process deletion
+        return None
+    except Exception as e:
+        error_message = str(e)
+        app.logger.error(f"An unexpected error occurred: {error_message}")
+        flash(f"An unexpected error occurred: {error_message}")
+        return error_message
+
+
+@app.route('/delete', methods=['POST'])
+def delete():
+    global namespace_list
+    global kubernetes_data_cache
+
+    selected_namespace = request.form.get('namespace', '')  # Get selected namespace from form submission
+    # Check if there are namespaces available
+    if not namespace_list:
+        flash("Error, no Namespace data")
+        return redirect('/')
+
+    if selected_namespace in namespace_list:
+        result = delete_application_main(selected_namespace)
+        if result is None:
+            namespace_list.remove(selected_namespace)
+            kubernetes_data_cache.pop(selected_namespace, None)  # Ensure cache is updated
+            if session.get('selected_namespace') == selected_namespace:
+                session.pop('kubernetes_data', None)
+                session.pop('selected_namespace', None)
+
+        flash(result or f"Deletion of namespace '{selected_namespace}' completed successfully.")
+    else:
+        flash("Namespace not found or not selected.")
+
+    return redirect('/')
+
+
 @app.route('/deploy', methods=['POST'])
 def deploy():
     global kubernetes_data_cache
     global kubernetes_cache_timestamp
-    chart_path = os.getenv("CHART_PATH", "/path/to/helm/chart")
+
+    chart_path = os.getenv("HELM_CHART", "/path/to/helm/chart")
     image_repository = request.form['image_repository']
     image_tag = request.form['image_tag']
     namespace = request.form['deploy_namespace']
 
     result = deploy_application_main(namespace, image_repository, image_tag, chart_path)
     message = result if result else f"Deployment of {image_repository}:{image_tag} in namespace {namespace} completed."
-
     # Update Kubernetes data cache
-    kubernetes_data_cache = fetch_kubernetes_data()
+    # Update Kubernetes data cache
+    delay = 2  # Start with 2 seconds
+    max_delay = 60  # Max delay time in seconds
+    retries = 0
+
+    while retries < 10:  # Try for a maximum of 10 retries
+        kubernetes_data_cache = fetch_kubernetes_data()
+        if namespace in kubernetes_data_cache and kubernetes_data_cache[namespace]:
+            break
+        time.sleep(delay)
+        delay = min(delay * 2, max_delay)  # Exponentially increase the delay
+        retries += 1
+
     app.logger.debug(f"\ndeploy_cache: {kubernetes_data_cache}\n")  # Log the updated cache for debugging
 
     # Update session and flash messages
@@ -141,91 +277,6 @@ def deploy():
         return redirect(url_for('index'))
 
 
-def delete_application(namespace):
-    """Delete the Helm release in the specified namespace."""
-    release_name = f"my-app-{namespace}"
-    
-    try:
-        # Uninstall the Helm release
-        run_command(f"helm uninstall {release_name} --namespace {namespace}")
-        app.logger.info(f"Application in namespace '{namespace}' deleted.")
-    except subprocess.CalledProcessError as e:
-        # Handle specific errors from helm uninstall command
-        error_message = str(e.output) if e.output else str(e)
-        app.logger.error(f"Helm uninstall command failed: {error_message}")
-        raise  # Raise the exception to propagate it further
-    except Exception as e:
-        # Handle other unexpected exceptions
-        app.logger.error(f"An unexpected error occurred: {str(e)}")
-        raise  # Raise the exception to propagate it further
-
-
-def delete_namespace(namespace):
-    """Delete a Kubernetes namespace using the Kubernetes API."""
-    v1 = client.CoreV1Api()
-    try:
-        v1.delete_namespace(name=namespace)
-        app.logger.info(f"Namespace '{namespace}' deleted.")
-    except Exception as e:
-        app.logger.info(f"{e}")
-
-
-def delete_application_main(namespace):
-    """Delete the application using delete_app.py."""
-    load_kube_config()
-
-    if namespace_exists(namespace) is None:
-        app.logger.error("Error checking namespace existence.")
-        flash("Error checking namespace existence.")
-        return False
-
-    if namespace_exists(namespace):
-        try:
-            delete_application(namespace)
-            delete_namespace(namespace)
-            time.sleep(5)
-            return None
-        except subprocess.CalledProcessError as e:
-            error_message = str(e.output) if e.output else str(e)
-            app.logger.error(f"Helm uninstall command failed: {error_message}")
-            return error_message
-        except Exception as e:
-            app.logger.error(f"An unexpected error occurred: {str(e)}")
-            return e
-    else:
-        app.logger.info(f"Namespace '{namespace}' does not exist.")
-        return f"Namespace '{namespace}' does not exist."
-
-
-@app.route('/delete', methods=['POST'])
-def delete():
-    global namespace_list
-
-    # Check if there are namespaces available
-    if not namespace_list:
-        flash("Error, no Namespace data")
-        return redirect('/')
-
-    selected_namespace = request.form.get('namespace', '')  # Get selected namespace from form submission
-
-    if selected_namespace in namespace_list:
-
-        result = delete_application_main(selected_namespace)
-        if not result:
-            namespace_list.remove(selected_namespace)
-            if session.get('selected_namespace') == selected_namespace:
-                session.pop('kubernetes_data', None)
-                session.pop('selected_namespace', None)
-            if selected_namespace in kubernetes_data_cache:
-                del kubernetes_data_cache[selected_namespace]
-
-        flash(result or f"Deletion of namespace '{selected_namespace}' completed successfully.")
-    else:
-        flash("Namespace not found or not selected.")
-
-    return redirect('/')
-
-
 @app.route('/describe', methods=['POST'])
 def describe_kubernetes():
     global kubernetes_data_cache
@@ -235,20 +286,21 @@ def describe_kubernetes():
     message = request.form.get('message', '')
 
     # Only fetch Kubernetes data if a namespace is selected
-    if selected_namespace and kubernetes_data_cache:
+    if selected_namespace:
         parsed_data = kubernetes_data_cache.get(selected_namespace, {})
         if not parsed_data:
             message += ", in /describe No Kubernetes data available."
         app.logger.debug(f"\nparsed data: {parsed_data}")
         session['kubernetes_data'] = parsed_data
         session['selected_namespace'] = selected_namespace
-
-        if message:
-            flash(message)
-        else:
-            flash(f"Viewing data for Namespace {selected_namespace}")
     else:
         flash("No namespace selected.")
+        return redirect('/')
+    
+    if message:
+        flash(message)
+    else:
+        flash(f"Viewing data for Namespace {selected_namespace}")
 
     # Redirect to index with parsed_data_json as query parameter
     return redirect('/')
@@ -279,9 +331,24 @@ async def index():
 
 
 def run_command(command):
-    """Run a shell command and return its output."""
-    result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return result.stdout.decode('utf-8').strip()
+    """Run a shell command and return its output or log an error if it fails."""
+    try:
+        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout = result.stdout.decode('utf-8').strip()
+        stderr = result.stderr.decode('utf-8').strip()
+        app.logger.info(f"Command output: {stdout}")
+        app.logger.info(f"Command error: {stderr}")
+        return stdout
+    except subprocess.CalledProcessError as e:
+        stdout = e.stdout.decode('utf-8').strip() if e.stdout else ''
+        stderr = e.stderr.decode('utf-8').strip() if e.stderr else ''
+        app.logger.info(f"Command failed with exit code {e.returncode}")
+        app.logger.info(f"Command output: {stdout}")
+        app.logger.info(f"Command error: {stderr}")
+        return stderr
+    except Exception as e:
+        app.logger.info(f"Unexpected error: {e}")
+        return str(e)
 
 
 def create_namespace(namespace):
@@ -296,17 +363,33 @@ def create_namespace(namespace):
 
 def deploy_application(namespace, image_repository, image_tag, chart_path):
     """Deploy or upgrade the application using Helm from a local chart path."""
-    release_name = f"my-app-{namespace}"
 
+    # Ensure no newline or carriage return characters in the variables
+    docker_hub_username = DOCKER_HUB_USERNAME.strip()
+    image_repository = image_repository.strip()
+    image_tag = image_tag.strip()
+    namespace = namespace.strip()
+    chart_path = chart_path.strip()
+
+    release_name = f"my-app-{namespace}"
+    check_helm()
     # Deploy or upgrade the application
     command = (
         f"helm upgrade --install {release_name} {chart_path} "
-        f"--namespace {namespace} --set image.repository={DOCKER_HUB_USERNAME}/{image_repository} "
-        f"--set image.tag={image_tag} --set namespace={namespace}"
+        f"--namespace {namespace} "
+        f"--set image.repository={docker_hub_username}/{image_repository} "
+        f"--set image.tag={image_tag} "
+        f"--set namespace={namespace}"
     )
-    run_command(command)
-    app.logger.info(f"Application deployed with image tag '{image_tag}' in namespace \
-    '{namespace}' from chart path '{chart_path}'.")
+    app.logger.info(run_command(command))
+    app.logger.info(f'Application deployed with image tag "{image_tag}" in namespace '
+                    f'"{namespace}" from chart path "{chart_path}".')
+
+
+def check_helm():
+    """Check helm installation."""
+    app.logger.info(run_command("which helm"))
+    app.logger.info(run_command("helm version"))
 
 
 def deploy_application_main(namespace, image_repository, image_tag, chart_path):
@@ -332,7 +415,7 @@ def get_namespaces():
         namespaces = v1.list_namespace()
         # Extract and filter namespace names
         namespace_names = [ns.metadata.name for ns in namespaces.items if
-                           ns.metadata.name not in ['kube-system', 'kube-public', 'kube-node-lease']]
+                           ns.metadata.name not in ['kube-system', 'kube-public', 'kube-node-lease', 'platform-app']]
         app.logger.debug(f"namespace_names: {namespace_names}")
         return namespace_names
     except client.exceptions.ApiException as e:
@@ -355,7 +438,7 @@ def namespace_exists(namespace):
 
 def fetch_kubernetes_data():
     # Load kube config from the default location
-    config.load_kube_config()
+    load_kube_config()
 
     v1 = client.CoreV1Api()
     apps_v1 = client.AppsV1Api()
