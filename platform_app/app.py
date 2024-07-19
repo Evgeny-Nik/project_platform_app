@@ -19,7 +19,7 @@ load_dotenv()
 
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SESSION_KEY') # Set a secret key for session management
+app.secret_key = os.getenv('SESSION_KEY')  # Set a secret key for session management
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -55,6 +55,7 @@ kubernetes_data_cache = None
 kubernetes_cache_timestamp = 0
 FORBIDDEN_NAMESPACES = ['kube-system', 'kube-public', 'kube-node-lease', 'platform-app', 'redis']
 
+
 def load_kube_config():
     if "KUBERNETES_SERVICE_HOST" in os.environ:
         print("loaded incluster config")
@@ -77,7 +78,7 @@ async def fetch_image_tags(session, repo_name):
         'Authorization': f'Bearer {DOCKER_HUB_ACCESS_TOKEN}',
         'Accept': 'application/json'
     }
-     # Ensure no newline or carriage return characters in the headers
+    # Ensure no newline or carriage return characters in the headers
     headers = {k: v.replace('\n', '').replace('\r', '') for k, v in headers.items()}
 
     url = f"https://hub.docker.com/v2/repositories/{DOCKER_HUB_USERNAME}/{repo_name}/tags/"
@@ -244,7 +245,6 @@ def deploy():
     result = deploy_application_main(namespace, image_repository, image_tag, chart_path)
     message = result if result else f"Deployment of {image_repository}:{image_tag} in namespace {namespace} completed."
     # Update Kubernetes data cache
-    # Update Kubernetes data cache
     delay = 2  # Start with 2 seconds
     max_delay = 60  # Max delay time in seconds
     retries = 0
@@ -363,7 +363,6 @@ def create_namespace(namespace):
 
 def deploy_application(namespace, image_repository, image_tag, chart_path):
     """Deploy or upgrade the application using Helm from a local chart path."""
-
     # Ensure no newline or carriage return characters in the variables
     docker_hub_username = DOCKER_HUB_USERNAME.strip()
     image_repository = image_repository.strip()
@@ -377,8 +376,8 @@ def deploy_application(namespace, image_repository, image_tag, chart_path):
     command = (
         f"helm upgrade --install {release_name} {chart_path} "
         f"--namespace {namespace} "
-        f"--set deployment.image.repository={docker_hub_username}/{image_repository} "
-        f"--set deployment.image.tag={image_tag} "
+        f"--set deployment.container.image={docker_hub_username}/{image_repository} "
+        f"--set deployment.container.tag={image_tag} "
         f"--set namespace={namespace}"
     )
     app.logger.info(run_command(command))
@@ -539,7 +538,8 @@ def fetch_kubernetes_data():
             'class': ingress.spec.ingress_class_name,
             'hosts': ', '.join([rule.host for rule in ingress.spec.rules]),
             'address': address_str,
-            'ports': ', '.join([str(p.backend.service.port.number) if p.backend and p.backend.service else 'N/A' for rule in ingress.spec.rules for p in rule.http.paths]),
+            'ports': ', '.join([str(p.backend.service.port.number) if p.backend and p.backend.service else
+                                'N/A' for rule in ingress.spec.rules for p in rule.http.paths]),
             'age': ingress.metadata.creation_timestamp
         })
 
