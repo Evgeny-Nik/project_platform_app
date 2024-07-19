@@ -53,7 +53,7 @@ namespace_list = []
 # Global variables for caching Kubernetes data
 kubernetes_data_cache = None
 kubernetes_cache_timestamp = 0
-
+FORBIDDEN_NAMESPACES = ['kube-system', 'kube-public', 'kube-node-lease', 'platform-app', 'redis']
 
 def load_kube_config():
     if "KUBERNETES_SERVICE_HOST" in os.environ:
@@ -415,7 +415,7 @@ def get_namespaces():
         namespaces = v1.list_namespace()
         # Extract and filter namespace names
         namespace_names = [ns.metadata.name for ns in namespaces.items if
-                           ns.metadata.name not in ['kube-system', 'kube-public', 'kube-node-lease', 'platform-app']]
+                           ns.metadata.name not in FORBIDDEN_NAMESPACES]
         app.logger.debug(f"namespace_names: {namespace_names}")
         return namespace_names
     except client.exceptions.ApiException as e:
