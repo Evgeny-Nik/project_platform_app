@@ -377,8 +377,8 @@ def deploy_application(namespace, image_repository, image_tag, chart_path):
     command = (
         f"helm upgrade --install {release_name} {chart_path} "
         f"--namespace {namespace} "
-        f"--set image.repository={docker_hub_username}/{image_repository} "
-        f"--set image.tag={image_tag} "
+        f"--set deployment.image.repository={docker_hub_username}/{image_repository} "
+        f"--set deployment.image.tag={image_tag} "
         f"--set namespace={namespace}"
     )
     app.logger.info(run_command(command))
