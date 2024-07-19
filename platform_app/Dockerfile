@@ -1,5 +1,14 @@
 FROM python:alpine3.19
 
+# Install curl and Helm using apk (Alpine Package Management)
+RUN apk update && \
+    apk add --no-cache curl bash openssl && \
+    curl -fsSL -o /tmp/get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 && \
+    chmod +x /tmp/get_helm.sh && \
+    /tmp/get_helm.sh && \
+    apk del --purge curl bash openssl && \
+    rm -rf /var/cache/apk/*
+
 WORKDIR /app
 
 COPY ./requirements.txt .
@@ -10,4 +19,11 @@ RUN pip3 install Flask[async]
 
 COPY . .
 
-CMD ["python3", "-m", "gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "--config", "gunicorn.conf.py", "wsgi:app"]
+# Ensure the session directory exists
+RUN mkdir -p /tmp/flask_session/ && chmod -R 777 /tmp/flask_session/
+
+CMD ["python3", "-m", "gunicorn","--config", "gunicorn.conf.py", "wsgi:app"]
+
+# ENTRYPOINT ["python3"]
+
+# CMD ["app.py"]
