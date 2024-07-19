@@ -1,9 +1,16 @@
 *
 
+!*/
 !*.py
 !*.html
 !*.css
 !*.js
 !requirements.txt
 !version.txt
-!*/
+
+**__pycache__**
+temp
+.env
+.env-example
+Dockerfile
+.dockerignore
