@@ -1,0 +1,31 @@
+deployment:
+  name: my-app
+  replicas: 4
+  appLabel: my-app
+  imagePullPolicy: IfNotPresent
+  container:
+    name: my-app
+    image: placeholder_image
+    tag: placeholder_tag
+    port: 8000
+
+service:
+  name: http
+  port: 80
+  protocol: TCP
+  targetPort: 8000
+  type: ClusterIP
+
+ingress:
+  className: alb
+  host: example.com
+  path: /
+  pathType: Prefix
+  alb:
+    scheme: internet-facing
+    targetType: ip
+    groupName: dev-team
+
+namespace: placeholder_namespace
+
+kubernetesClusterDomain: cluster.local

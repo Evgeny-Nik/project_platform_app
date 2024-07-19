@@ -1,6 +1,7 @@
 *
 
 !*/
+!charts/**
 !app.py
 !*.html
 !*.css
@@ -13,4 +14,6 @@
 !Dockerfile
 .terraform
 __pycache__
+tf-files
 **test**
+

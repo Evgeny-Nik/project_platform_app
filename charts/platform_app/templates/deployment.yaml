@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.name }}-deployment
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.deployment.appLabel }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deployment.appLabel }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      containers:
+      - name: {{ .Values.deployment.container.name }}
+        image: {{ .Values.deployment.container.image }}:{{ .Values.deployment.container.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
+        ports:
+        - containerPort: {{ .Values.deployment.container.port }}
+        env:
+        - name: HELM_CHART
+          value: {{ .Values.env.helmChart }}
+        - name: SESSION_KEY
+          value: {{ .Values.env.flaskSessionKey }}
+        - name: REDIS_HOST_URL
+          value: {{ .Values.env.redisHostUrl }}
+        - name: REDIS_HOST_PORT
+          value: {{ .Values.env.redisHostPort | quote }}
+        - name: REDIS_HOST_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.env.redisPasswordSecretName }}
+              key: {{ .Values.env.redisPasswordSecretKey }}
+        envFrom:
+        - secretRef:
+            name: {{ .Values.env.registryCreds }}

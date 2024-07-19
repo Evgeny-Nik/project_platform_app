@@ -1,0 +1,8 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Values.clusterRole.name }}
+rules:
+- apiGroups: ["", "apps", "networking.k8s.io"]
+  resources: ["pods", "namespaces", "services", "ingresses", "deployments", "replicasets", "statefulsets", "daemonsets", "secrets"]
+  verbs: ["get", "list", "watch", "delete", "create", "update", "patch"]

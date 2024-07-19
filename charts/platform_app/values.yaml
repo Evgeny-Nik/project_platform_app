@@ -1,0 +1,49 @@
+namespace: platform-app
+
+env:
+  registryCreds: docker-hub-credentials
+  helmChart: https://github.com/Evgeny-Nik/test_repo/raw/main/helm-chart/platform-chart-0.1.0.tgz
+  flaskSessionKey: your_secret_key
+  redisHostUrl: my-redis-master.redis.svc.cluster.local
+  redisHostPort: 6379
+  redisPasswordSecretName: redis-password
+  redisPasswordSecretKey: REDIS_HOST_PASSWORD
+
+serviceAccount:
+  name: platform-app-service-account
+
+clusterRole:
+  name: platform-app-cluster-role
+
+clusterRoleBinding:
+  name: platform-app-cluster-role-binding
+
+deployment:
+  name: platform-app
+  replicas: 2
+  appLabel: plaform-app
+  imagePullPolicy: IfNotPresent
+  container:
+    name: plaform-app
+    image: evgenyniko/platform_app
+    tag: 1.0.1
+    port: 8000
+
+service:
+  name: http
+  port: 8000
+  protocol: TCP
+  targetPort: 8000
+  type: ClusterIP
+
+ingress:
+  className: alb
+  host: example.com
+  path: /
+  pathType: Prefix
+  alb:
+    scheme: internet-facing
+    targetType: ip
+    groupName: dev-team
+
+kubernetesClusterDomain: cluster.local
