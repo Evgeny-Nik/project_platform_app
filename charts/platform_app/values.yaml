@@ -22,7 +22,7 @@ deployment:
   name: platform-app
   replicas: 2
   appLabel: plaform-app
-  imagePullPolicy: IfNotPresent
+  imagePullPolicy: Always  #IfNotPresent
   container:
     name: plaform-app
     image: evgenyniko/platform_app
