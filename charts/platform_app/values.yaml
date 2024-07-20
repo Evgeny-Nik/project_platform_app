@@ -4,10 +4,10 @@ env:
   registryCreds: docker-hub-credentials
   helmChart: https://github.com/Evgeny-Nik/project_platform_app/raw/main/charts/deploying_chart/my-app-chart-1.0.0.tgz
   flaskSessionKey: your_secret_key
-  redisHostUrl: my-redis-master.redis.svc.cluster.local
+  redisHostUrl: redis-master.redis.svc.cluster.local
   redisHostPort: 6379
   redisPasswordSecretName: redis-password
-  redisPasswordSecretKey: REDIS_HOST_PASSWORD
+  redisPasswordSecretKey: password
 
 serviceAccount:
   name: platform-app-service-account
