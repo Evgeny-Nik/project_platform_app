@@ -7,7 +7,7 @@ env:
   redisHostUrl: redis-master.redis.svc.cluster.local
   redisHostPort: 6379
   redisPasswordSecretName: redis-password
-  redisPasswordSecretKey: password
+  redisPasswordSecretKey: REDIS_HOST_PASSWORD
 
 serviceAccount:
   name: platform-app-service-account
