@@ -51,6 +51,8 @@ jobs:
 
     - name: Update Manifest and Version Files
       run: |
+        pwd
+        ls
         # Update the tag in the values.yaml file
         sed -i "s/tag: .*/tag: ${VERSION}/" charts/platform_app/values.yaml
         
