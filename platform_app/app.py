@@ -53,7 +53,7 @@ namespace_list = []
 # Global variables for caching Kubernetes data
 kubernetes_data_cache = None
 kubernetes_cache_timestamp = 0
-FORBIDDEN_NAMESPACES = ['kube-system', 'kube-public', 'kube-node-lease', 'platform-app', 'redis']
+FORBIDDEN_NAMESPACES = ['kube-system', 'kube-public', 'kube-node-lease', 'platform-app', 'redis', 'argocd']
 
 
 def load_kube_config():
@@ -266,7 +266,10 @@ def deploy():
     flash(message)
 
     # Make an internal POST request to /describe with namespace data
-    describe_url = url_for('describe_kubernetes', _external=True)
+    if "KUBERNETES_SERVICE_HOST" in os.environ:
+        describe_url = 'http://platform-app-service.default.svc.cluster.local/describe'
+    else:
+        describe_url = url_for('describe_kubernetes', _external=True)
     response = requests.post(describe_url, data={'namespace': namespace, 'message': message})
 
     # Check if the request was successful and handle accordingly
