@@ -127,7 +127,7 @@ The `.env` file in your `platform_app` directory should have the following examp
 
 ## To-Do List
 
-- [ ] Fully integrate flask sessions: add user login/logout, support for multiple pods/gunicorn workers, 
+- [ ] Fully integrate flask sessions: add user login/logout, support for multiple pods/gunicorn workers. 
 - [ ] Create tests.
 - [ ] Integrate HTTPS support for the platform app via Let's Encrypt.
 
