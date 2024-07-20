@@ -1,7 +1,8 @@
 *
 
 !*/
-!charts/**
+!*.yaml
+!*.tf
 !app.py
 !*.html
 !*.css
@@ -12,8 +13,8 @@
 !.gitignore
 !.dockerignore
 !Dockerfile
+!.env-example
 .terraform
 __pycache__
-tf-files
 **test**
 
