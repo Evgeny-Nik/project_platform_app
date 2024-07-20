@@ -20,13 +20,13 @@ clusterRoleBinding:
 
 deployment:
   name: platform-app
-  replicas: 2
+  replicas: 1
   appLabel: plaform-app
-  imagePullPolicy: Always  #IfNotPresent
+  imagePullPolicy: IfNotPresent
   container:
     name: plaform-app
     image: evgenyniko/platform_app
-    tag: 1.0.1
+    tag: 1.0.0
     port: 8000
 
 service:
