@@ -116,7 +116,7 @@ The `.env` file in your `platform_app` directory should have the following examp
      terraform plan
      terraform apply -auto-approve
      ```
-     For further Setup steps go to [terraform README](tf_files/README.md)
+     For further Setup steps go to [tf_files README](tf_files/README.md)
 
 </details>
 
@@ -133,5 +133,5 @@ The `.env` file in your `platform_app` directory should have the following examp
 
 ## Links
 - [platform_app README](platform_app/README.md)
-- [tf-files README](tf_files/README.md)
+- [tf_files README](tf_files/README.md)
 - [charts](charts/README.md)
