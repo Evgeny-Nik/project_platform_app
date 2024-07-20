@@ -7,6 +7,8 @@ on:
     paths:       
       - 'platform_app/**'
       - '.github/workflows/platform_app_ci.yaml'
+      - '!**/README.md'
+
 jobs:
   build:
     runs-on: ubuntu-latest
