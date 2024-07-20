@@ -67,7 +67,7 @@ jobs:
         # Commit the changes
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
-        git add charts/platform_app/values.yaml version.txt
+        git add ../charts/platform_app/values.yaml version.txt
         git commit -m "Update Docker image tag to ${VERSION} and version.txt"
         git push
       env:
