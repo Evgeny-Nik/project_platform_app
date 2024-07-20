@@ -54,6 +54,8 @@ jobs:
         pwd
         ls
         # Update the tag in the values.yaml file
+        ls charts/
+        ls charts/platform_app
         sed -i "s/tag: .*/tag: ${VERSION}/" charts/platform_app/values.yaml
         
         cd platform_app
