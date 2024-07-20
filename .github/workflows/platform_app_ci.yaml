@@ -1,0 +1,76 @@
+name: CI for Flask Platform App
+
+on:
+  push:
+    branches: 
+      - "main"
+    paths:       
+      - 'platform_app/**'
+      - '.github/workflows/platform_app_ci.yaml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Read and Increment Version
+      id: increment_version
+      run: |
+        cd platform_app
+        
+        # Read the current version from version.txt
+        current_version=$(cat version.txt)
+        echo "Current version: $current_version"
+        
+        # Increment the minor version
+        IFS='.' read -r major minor patch <<< "$current_version"
+        minor=$((minor + 1))
+        new_version="$major.$minor.$patch"
+        echo "New version: $new_version"
+        
+        # Set the new version as an environment variable
+        echo "VERSION=$new_version" >> $GITHUB_ENV
+
+    - name: Build the Docker image
+      run: |
+        cd platform_app
+        docker build . --file Dockerfile --tag ${{ secrets.DOCKERHUB_USER }}/platform_app:${{ env.VERSION }}
+        docker tag ${{ secrets.DOCKERHUB_USER }}/platform_app:${{ env.VERSION }} ${{ secrets.DOCKERHUB_USER }}/platform_app:latest
+      
+    - name: Docker Login
+      uses: docker/login-action@v3.1.0
+      with:
+        username: ${{ secrets.DOCKERHUB_USER }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: push to Docker Hub
+      run: |
+        docker push ${{ secrets.DOCKERHUB_USER }}/platform_app:${{ env.VERSION }}
+        docker push ${{ secrets.DOCKERHUB_USER }}/platform_app:latest
+
+    - name: Update Manifest and Version Files
+      run: |
+        # Update the tag in the values.yaml file
+        sed -i "s/tag: .*/tag: ${VERSION}/" charts/platform_app/values.yaml
+        
+        cd platform_app
+
+        # Update the version.txt file
+        echo "${VERSION}" > version.txt
+        
+        # Verify the changes
+        echo "Updated values.yaml:"
+        cat charts/platform_app/values.yaml
+        echo "Updated version.txt:"
+        cat version.txt
+        
+        # Commit the changes
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+        git add charts/platform_app/values.yaml version.txt
+        git commit -m "Update Docker image tag to ${VERSION} and version.txt"
+        git push
+      env:
+        VERSION: ${{ env.VERSION }}
+    
