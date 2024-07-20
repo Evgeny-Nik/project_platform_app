@@ -91,7 +91,7 @@ To run the app within Kubernetes:
 
 - [Manually](../charts/README.md)
 
-- [Automatically using Terraform](../tf-files/README.md)
+- [Automatically using Terraform](../tf_files/README.md)
 
 ## To Do List
 
