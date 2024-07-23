@@ -78,8 +78,6 @@ jobs:
       id: capture_error
       run: echo "error_message=$(tail -n 10 build.log)" >> $GITHUB_ENV
 
-  notify:
-    steps:
     - uses: 8398a7/action-slack@v3
       with:
         status: ${{ job.status }}
