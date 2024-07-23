@@ -118,12 +118,39 @@ The `.env` file in your `platform_app` directory should have the following examp
      ```
      For further Setup steps go to [tf_files README](tf_files/README.md)
 
+## Slack
+
+```yaml
+    - name: Send Slack Notification
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+      if: always() # Pick up events even if the job fails or is canceled.
+```
+
+To incorporate Slack notifications for your GitHub Actions pipeline do the following:
+
+1. **Set Up Slack Webhook**:
+   - Create a [Slack Application](https://api.slack.com/apps)
+   - Create an Incoming Webhook in your Slack workspace and obtain the Webhook URL.
+   - Store the Webhook URL as a secret in your GitHub repository settings:
+     - Go to your repository on GitHub.
+     - Click on `Settings` > `Secrets and variables` > `Actions`.
+     - Click on `New repository secret` and add `SLACK_WEBHOOK_URL` with the Webhook URL as the value.
+
+3. **Customize Notification Fields**:
+   - Customize the fields parameter in the `with` section to include the details you want in the Slack message.
+
 </details>
 
 ### GitHub Actions Plugins Used
 
 - **actions/checkout@v4**: Checks out the repository to the runner.
 - **docker/login-action@v3.1.0**: Logs into Docker Hub.
+- **8398a7/action-slack@v3**: Sends a Slack message.
 
 ## To-Do List
 
