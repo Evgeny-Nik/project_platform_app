@@ -73,11 +73,6 @@ jobs:
         git commit -m "Update Docker image tag to ${VERSION} and version.txt"
         git push
 
-    - name: Capture error message
-      if: failure()
-      id: capture_error
-      run: echo "error_message=$(tail -n 10 build.log)" >> $GITHUB_ENV
-
     - uses: 8398a7/action-slack@v3
       with:
         status: ${{ job.status }}
