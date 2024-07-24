@@ -3,7 +3,7 @@
 !*/
 !*.yaml
 !*.tf
-!app.py
+!*.py
 !*.html
 !*.css
 !*.js
