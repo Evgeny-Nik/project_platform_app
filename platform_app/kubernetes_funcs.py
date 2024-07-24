@@ -60,7 +60,7 @@ def fetch_kubernetes_data():
         ns = deployment.metadata.namespace
         namespace_dict[ns].setdefault('Deployments', []).append({
             'name': deployment.metadata.name,
-            'ready': f"{deployment.status.ready_replicas}/{deployment.status.replicas or 0}",
+            'ready': f"{deployment.status.ready_replicas or 0}/{deployment.status.replicas or 0}",
             'up_to_date': deployment.status.updated_replicas or 0,
             'available': deployment.status.available_replicas or 0,
             'age': convert_datetime_to_str(deployment.metadata.creation_timestamp)
