@@ -7,7 +7,7 @@ resource "kubernetes_namespace" "platform_app" {
   ]
 }
 
-resource "kubectl_manifest" "argocd_application" {
+resource "kubectl_manifest" "platform_app_manifest" {
   yaml_body = file("${path.module}/platform_app.yaml")
 
   depends_on = [
@@ -52,16 +52,6 @@ resource "kubernetes_secret" "dockerhub_credentials" {
 }
 
 resource "time_sleep" "wait_for_platform_app" {
-  depends_on      = [kubectl_manifest.argocd_application]
-  create_duration = "10s"
-}
-
-data "kubernetes_ingress" "platform_app_ingress" {
-  metadata {
-    name      = "argocd-server"
-    namespace = kubernetes_namespace.platform_app.metadata[0].name
-  }
-  depends_on = [
-    time_sleep.wait_for_platform_app
-  ]
+  depends_on      = [kubectl_manifest.platform_app_manifest]
+  create_duration = var.wait_time
 }

@@ -28,28 +28,9 @@ resource "helm_release" "argocd" {
 
 resource "time_sleep" "wait_for_argocd" {
   depends_on      = [helm_release.argocd]
-  create_duration = "10s"
+  create_duration = var.wait_time
 }
 
-data "kubernetes_ingress_v1" "argocd" {
-  metadata {
-    name      = "argocd-server"
-    namespace = "argocd"
-  }
-  depends_on = [
-    time_sleep.wait_for_argocd
-  ]
-}
-
-data "kubernetes_ingress" "argocd_ingress" {
-  metadata {
-    name      = "argocd-server"
-    namespace = helm_release.argocd.namespace
-  }
-  depends_on = [
-    time_sleep.wait_for_argocd
-  ]
-}
 
 ##  this data can be used to set password directly to outputs
 # data "kubernetes_secret" "argocd_password" {
