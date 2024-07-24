@@ -57,14 +57,21 @@ These variables can be set in your environment or a `.env` file:
    SESSION_KEY='<session_secret_key>'
    HELM_CHART='<path_or_url_to_helm_chart>'
    KUBECONFIG='<path_to_.kube/config>'
+   REDIS_HOST_URL='<your_redis_host_url>'
+   REDIS_HOST_PORT='<port_num_your_redis_is_exposed_at>'
+   REDIS_HOST_PASSWORD='<your_redis_password>'
    ```
 
 5. Run the Flask app:
    ```sh
-   python app.py
+   python3 app.py
+   ```
+   or
+   ```sh
+   gunicorn -c gunicorn.conf.py wsgi:app
    ```
 
-6. Open your web browser and navigate to `http://localhost:5000/`.
+6. Open your web browser and navigate to: `http://localhost:5000/` or if ran using gunicorn command:`http://localhost:8000/`.
 
 ## Docker
 
