@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, url_for, redirect, flash, get_flashed_messages, session
 from flask_session import Session
-from app_config import logger, SESSION_KEY, SESSION_CONFIG, OS_ENV
+from app_config import logger, SESSION_KEY, SESSION_CONFIG, OS_ENV, SELF_K8S_SERVICE_DNS
 import os
 import threading
 import time
@@ -87,7 +87,7 @@ def deploy():
 
     # Make an internal POST request to /describe with namespace data
     if "KUBERNETES_SERVICE_HOST" in OS_ENV:
-        describe_url = 'http://platform-app-service.platform-app.svc.cluster.local/describe'
+        describe_url = SELF_K8S_SERVICE_DNS
     else:
         describe_url = url_for('describe_kubernetes', _external=True)
     response = requests.post(describe_url, data={'namespace': namespace, 'message': message})

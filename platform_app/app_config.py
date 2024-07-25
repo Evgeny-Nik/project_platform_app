@@ -12,7 +12,7 @@ DOCKER_HUB_ACCESS_TOKEN = os.getenv('DOCKER_HUB_ACCESS_TOKEN')
 REDIS_HOST_URL = os.getenv('REDIS_HOST_URL', 'localhost')
 REDIS_HOST_PORT = int(os.getenv('REDIS_HOST_PORT', 6379))
 REDIS_HOST_PASSWORD = os.getenv('REDIS_HOST_PASSWORD', None)
-
+SELF_K8S_SERVICE_DNS = 'http://platform-app-service.platform-app.svc.cluster.local/describe'
 # Create a Redis client instance for general use
 redis_client = redis.StrictRedis(
     host=REDIS_HOST_URL,
