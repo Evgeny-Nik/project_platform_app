@@ -44,8 +44,9 @@ def delete():
 
     if selected_namespace in get_kubernetes_ns_list():
         result = delete_application_main(selected_namespace)
-        session.pop('selected_namespace', None)
-        session.pop('parsed_data', None)
+        if not result:
+            session.pop('selected_namespace', None)
+            session.pop('parsed_data', None)
         flash(result or f"Deletion of namespace '{selected_namespace}' completed successfully.")
     else:
         flash("Namespace not found or not selected.")
