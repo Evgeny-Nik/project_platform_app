@@ -38,10 +38,10 @@ service:
 
 ingress:
   className: alb
-  host: example.com
+  host: evg-platform-app.com
   path: /
   pathType: Prefix
-  tls: tls-cert-mjdf4
+  tls: tls
   alb:
     scheme: internet-facing
     targetType: ip
