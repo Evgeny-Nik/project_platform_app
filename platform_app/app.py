@@ -87,7 +87,7 @@ def deploy():
 
     # Make an internal POST request to /describe with namespace data
     if "KUBERNETES_SERVICE_HOST" in OS_ENV:
-        describe_url = 'http://platform-app-service.default.svc.cluster.local/describe'
+        describe_url = 'http://platform-app-service.platform-app.svc.cluster.local/describe'
     else:
         describe_url = url_for('describe_kubernetes', _external=True)
     response = requests.post(describe_url, data={'namespace': namespace, 'message': message})
