@@ -50,3 +50,8 @@ resource "helm_release" "aws_load_balancer_controller" {
     module.aws_load_balancer_controller_irsa_role
   ]
 }
+
+resource "time_sleep" "wait_for_load_balancer_controller" {
+  depends_on = [helm_release.aws_load_balancer_controller]
+  create_duration = var.wait_time
+}

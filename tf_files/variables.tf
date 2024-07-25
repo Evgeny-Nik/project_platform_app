@@ -35,5 +35,5 @@ variable "dockerhub_access_token" {
 variable "wait_time" {
   type        = string
   description = "The time to wait for creation of helm charts"
-  default     = "10s"
+  default     = "20s"
 }

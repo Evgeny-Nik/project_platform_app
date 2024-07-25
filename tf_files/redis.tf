@@ -16,8 +16,8 @@ resource "helm_release" "redis" {
   version    = "16.12.0"
 
   depends_on = [
-    module.eks,
-    kubernetes_namespace.redis
+    kubernetes_namespace.redis,
+    time_sleep.wait_for_load_balancer_controller
   ]
 }
 
