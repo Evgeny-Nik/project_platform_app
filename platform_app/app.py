@@ -68,19 +68,6 @@ def deploy():
         flash(message)
         return redirect(url_for('index'))
 
-    # Update Kubernetes data cache
-    delay = 2  # Start with 2 seconds
-    max_delay = 60  # Max delay time in seconds
-    retries = 0
-
-    while retries < 10:  # Try for a maximum of 10 retries
-        kubernetes_data_cache = fetch_kubernetes_data()
-        if namespace in kubernetes_data_cache and kubernetes_data_cache[namespace]:
-            break
-        time.sleep(delay)
-        delay = min(delay * 2, max_delay)  # Exponentially increase the delay
-        retries += 1
-
     logger.debug(f"\ndeploy_cache: {get_kubernetes_data_cache}\n")  # Log the updated cache for debugging
 
     flash(message)
