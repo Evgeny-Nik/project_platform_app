@@ -29,6 +29,7 @@ SESSION_CONFIG = {
     'SESSION_KEY_PREFIX': 'session:',
     'SESSION_REDIS': redis_client,
 }
+
 # for local session management:
 # {
 #     'SESSION_TYPE': 'filesystem',
@@ -46,18 +47,6 @@ FORBIDDEN_NAMESPACES = ['kube-system',
                         ]
 OS_ENV = os.environ
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
-
-
-
-
-
-
-
-
-
-
-
-
