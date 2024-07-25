@@ -60,23 +60,25 @@ def deploy():
     image_repository = request.form['image_repository']
     image_tag = request.form['image_tag']
     namespace = request.form['deploy_namespace']
-
+    logger.info("running /deploy")
     result = deploy_application_main(namespace, image_repository, image_tag, chart_path)
+    logger.info(f"result: {result}")
     message = result if result else f"Deployment of {image_repository}:{image_tag} in namespace {namespace} completed."
 
     if result:
         flash(message)
         return redirect(url_for('index'))
 
-    logger.debug(f"\ndeploy_cache: {get_kubernetes_data_cache}\n")  # Log the updated cache for debugging
+    logger.debug(f"\ndeploy_cache: {get_kubernetes_data_cache()}\n")  # Log the updated cache for debugging
 
     flash(message)
-
+    logger.info(f"KUBERNETES_SERVICE_HOST in OS_ENV: {'KUBERNETES_SERVICE_HOST' in OS_ENV}")
     # Make an internal POST request to /describe with namespace data
     if "KUBERNETES_SERVICE_HOST" in OS_ENV:
         describe_url = SELF_K8S_SERVICE_DNS
     else:
         describe_url = url_for('describe_kubernetes', _external=True)
+    logger.info(f"describe_url: {describe_url}")
     response = requests.post(describe_url, data={'namespace': namespace, 'message': message})
 
     # Check if the request was successful and handle accordingly
