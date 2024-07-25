@@ -9,6 +9,7 @@ metadata:
     alb.ingress.kubernetes.io/scheme: {{ .Values.ingress.alb.scheme }}
     alb.ingress.kubernetes.io/target-type: {{ .Values.ingress.alb.targetType }}
     alb.ingress.kubernetes.io/group.name: {{ .Values.ingress.alb.groupName }}
+    alb.ingress.kubernetes.io/ssl-redirect: {{ .Values.ingress.alb.ssl-redirect }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
@@ -22,3 +23,7 @@ spec:
                   number: {{ .Values.service.port }}
             path: {{ .Values.ingress.path }}
             pathType: {{ .Values.ingress.pathType }}
+  tls:
+    - hosts:
+        - {{ .Release.Namespace }}.{{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tls }}

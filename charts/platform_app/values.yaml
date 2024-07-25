@@ -41,9 +41,11 @@ ingress:
   host: example.com
   path: /
   pathType: Prefix
+  tls: tls-secret
   alb:
     scheme: internet-facing
     targetType: ip
     groupName: dev-team
+    ssl-redirect: "true"
 
 kubernetesClusterDomain: cluster.local
