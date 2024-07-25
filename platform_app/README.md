@@ -85,6 +85,7 @@ To run the app using Docker:
 2. Run the Docker container:
    ```sh
      docker run -d -v </path/to/.kube/config>:</path/to/.kube/config> \
+        # for minikube add -v </path/to/.minikube>:</path/to/.minikube_in_container>
          -p 8000:8000 \
          --env-file .env \
          ${DOCKERHUB_USERNAME}/platform_app:latest
@@ -94,11 +95,91 @@ To run the app using Docker:
 
 ## Kubernetes
 
-To run the app within Kubernetes:
+<details>
+<summary><h2>Minikube</h2></summary>
+1. **Start Minikube**
 
-- [Manually](../charts/README.md)
+   ```sh
+   minikube start
+   ```
+
+2. **Deploy Redis**
+
+  - Install a helm chart for Redis:
+
+   ```sh
+   helm repo add bitnami https://charts.bitnami.com/bitnami
+   helm repo update
+   helm install redis bitnami/redis
+   ```
+
+  - Copy secret to platform-app namespace
+
+   ```sh
+   kubectl create secret generic redis-password --namespace platform-app \
+     --from-literal=REDIS_HOST_PASSWORD="$(kubectl get secret redis -n redis -o \
+     jsonpath='{.data.redis-password}' | base64 -d)"
+   ```
+
+3. **Install Argo CD**
+
+  - Install Argo CD using the following commands:
+
+   ```sh
+   kubectl create namespace argocd
+   kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+   ```
+
+  - Expose the Argo CD server:
+
+   ```sh
+   kubectl port-forward svc/argocd-server -n argocd 8080:443
+   ```
+
+  - Login to the Argo CD UI:
+
+     Open your browser and go to `http://localhost:8080` \
+     The default username is `admin`. Obtain the initial password:
+
+   ```sh
+   kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
+   ```
+
+4. **Deploy `platform-app` with Argo CD**
+
+  - Create dockerhub-credentials secret
+
+   ```sh
+   kubectl create secret generic docker-hub-credentials \
+     --namespace platform-app \
+     --from-literal=DOCKER_HUB_USERNAME='<your_dockerhub_username>' \
+     --from-literal=DOCKER_HUB_ACCESS_TOKEN='<your__dockerhub_access_token>'
+   ```
+  - Configure Argo CD
+
+    1. Create a Git Repository with Kubernetes Manifests: Ensure you have a Git repository containing the manifests for deploying `platform-app`.
+
+    2. Create an Argo CD Application:
+   ```sh
+   kubectl apply -f <path_to_application_manifest.yaml>
+   ```
+
+5. **Access the Application**
+
+   Expose your application using a LoadBalancer service type or port-forwarding for testing:
+
+   ```sh
+   kubectl port-forward svc/platform-app-service 8000:8000
+   ```
+
+   Visit `http://localhost:8000` in your browser to access `platform-app`.
+</details>
+
+<details>
+<summary><h2>Using Terraform</h2></summary>
 
 - [Automatically using Terraform](../tf_files/README.md)
+</details>
 
 ## To Do List
 
