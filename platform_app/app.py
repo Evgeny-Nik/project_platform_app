@@ -3,11 +3,10 @@ from flask_session import Session
 from app_config import logger, SESSION_KEY, SESSION_CONFIG, OS_ENV, SELF_K8S_SERVICE_DNS
 import os
 import threading
-import time
 import requests
 from cache_config import get_kubernetes_data_cache, get_kubernetes_ns_list, get_docker_images_cache
 from docker_funcs import update_docker_images_cache_loop
-from kubernetes_funcs import update_kubernetes_cache, update_k8s_namespace_list, fetch_kubernetes_data
+from kubernetes_funcs import update_kubernetes_cache, update_k8s_namespace_list
 from delete_funcs import delete_application_main
 from deploy_funcs import deploy_application_main
 
@@ -75,7 +74,7 @@ def deploy():
     logger.info(f"KUBERNETES_SERVICE_HOST in OS_ENV: {'KUBERNETES_SERVICE_HOST' in OS_ENV}")
     # Make an internal POST request to /describe with namespace data
     if "KUBERNETES_SERVICE_HOST" in OS_ENV:
-        describe_url = f"http://${SELF_K8S_SERVICE_DNS}:8000/describe"
+        describe_url = f"http://{SELF_K8S_SERVICE_DNS}:8000/describe"
     else:
         describe_url = url_for('describe_kubernetes', _external=True)
     logger.info(f"describe_url: {describe_url}")

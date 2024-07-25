@@ -1,6 +1,5 @@
 from app_config import logger
 from wsgi import start_background_threads
-import multiprocessing
 
 
 def post_fork(server, worker):
