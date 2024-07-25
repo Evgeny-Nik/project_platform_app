@@ -10,7 +10,6 @@
 
 **__pycache__**
 temp
-.env
 .env-example
 Dockerfile
 .dockerignore

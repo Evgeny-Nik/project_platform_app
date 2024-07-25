@@ -1,6 +1,6 @@
 from app_config import logger
 from wsgi import start_background_threads
-from kubernetes_funcs import load_kube_config  # Assuming load_kube_config is defined in app.py
+import multiprocessing
 
 
 def post_fork(server, worker):
@@ -9,6 +9,18 @@ def post_fork(server, worker):
     logger.debug("Gunicorn started background threads")
 
 
-# Other Gunicorn settings
+# General settings
+bind = '0.0.0.0:8000'
 workers = 2
-bind = "0.0.0.0:8000"
+threads = 2
+timeout = 120
+graceful_timeout = 120
+keepalive = 2
+
+# Logging settings
+loglevel = 'info'
+accesslog = '-'
+errorlog = '-'
+
+# Additional settings (optional)
+worker_class = 'sync'  # or 'gevent', 'eventlet' for async workers

@@ -47,6 +47,6 @@ FORBIDDEN_NAMESPACES = ['kube-system',
                         ]
 OS_ENV = os.environ
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)

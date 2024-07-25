@@ -22,7 +22,7 @@ COPY . .
 # Ensure the session directory exists
 RUN mkdir -p /tmp/flask_session/ && chmod -R 777 /tmp/flask_session/
 
-CMD ["python3", "-m", "gunicorn","--config", "gunicorn.conf.py", "wsgi:app"]
+CMD ["gunicorn","-c", "gunicorn.conf.py", "wsgi:app"]
 
 # ENTRYPOINT ["python3"]
 

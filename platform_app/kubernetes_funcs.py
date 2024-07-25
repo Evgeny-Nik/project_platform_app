@@ -9,24 +9,29 @@ from app_config import logger, KUBECONFIG, OS_ENV
 
 
 def load_kube_config():
-    if "KUBERNETES_SERVICE_HOST" in OS_ENV:
-        config.load_incluster_config()
-        api_client = client.ApiClient()
-        logger.debug("loaded incluster config")
-        return api_client
-    else:
-        kubeconfig_path = KUBECONFIG
-        if kubeconfig_path:
-            try:
+    try:
+        if "KUBERNETES_SERVICE_HOST" in OS_ENV:
+            # Running inside a Kubernetes cluster
+            config.load_incluster_config()
+            logger.debug("Loaded in-cluster config")
+        else:
+            # Running outside of Kubernetes
+            kubeconfig_path = KUBECONFIG
+            if kubeconfig_path:
                 logger.debug(f"Loading kubeconfig from: {kubeconfig_path}")
                 config.load_kube_config(config_file=kubeconfig_path)
-                api_client = client.ApiClient()
                 logger.debug("Kubeconfig loaded successfully")
-                return api_client
-            except Exception as e:
-                logger.error(f"Error loading kubeconfig: {e}")
-        else:
-            logger.warning("KUBECONFIG environment variable not set")
+            else:
+                raise ValueError("KUBECONFIG environment variable not set")
+
+        api_client = client.ApiClient()
+        logger.debug("Kubernetes API client created successfully")
+        return api_client
+
+    except Exception as e:
+        logger.error(f"Error loading kubeconfig or creating API client: {e}")
+        # Handle the exception or re-raise if necessary
+        raise
 
 
 k8s_api_client = load_kube_config()
