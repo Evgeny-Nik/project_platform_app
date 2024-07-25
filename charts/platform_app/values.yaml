@@ -41,7 +41,7 @@ ingress:
   host: example.com
   path: /
   pathType: Prefix
-  tls: tls-secret
+  tls: tls-cert-mjdf4
   alb:
     scheme: internet-facing
     targetType: ip
