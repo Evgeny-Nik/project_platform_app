@@ -20,9 +20,8 @@ resource "helm_release" "argocd" {
   ]
 
   depends_on = [
-    module.eks,
-    helm_release.aws_load_balancer_controller,
-    kubernetes_namespace.argocd
+    kubernetes_namespace.argocd,
+    time_sleep.wait_for_load_balancer_controller
   ]
 }
 

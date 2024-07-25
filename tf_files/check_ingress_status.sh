@@ -31,18 +31,24 @@ while true; do
     echo "Error fetching ingress status: $STATUS"
   elif [ -n "$STATUS" ]; then
     echo "Ingress is ready: $STATUS"
-    # Perform a curl to the STATUS and extract the IP address
+
+    # Perform a curl to the STATUS and capture verbose output
     CURL_OUTPUT=$(curl -v $STATUS 2>&1)
+    echo "Curl output for debugging:"
+    echo "$CURL_OUTPUT"
+
+    # Extract IP address using grep and awk
     IP_ADDRESS=$(echo "$CURL_OUTPUT" | grep -oP 'Connected to [^ ]+ \(\K[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
 
     if [[ $IP_ADDRESS =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
       echo "Extracted IP address from curl: $IP_ADDRESS"
+
       # Edit /etc/hosts file
       TEMP_HOSTS=$(mktemp)
       sudo cp /etc/hosts $TEMP_HOSTS
 
       # Update or add entries for argocd.example.com and platform-app.example.com
-      if grep -q "argocd.example.com" /etc/hosts; then
+      if grep -q "argocd.example.com" $TEMP_HOSTS; then
         sudo sed -i "s/.*argocd.example.com/$IP_ADDRESS argocd.example.com/" $TEMP_HOSTS
         echo "Updated entry for argocd.example.com"
       else
@@ -50,7 +56,7 @@ while true; do
         echo "Added entry for argocd.example.com"
       fi
 
-      if grep -q "platform-app.example.com" /etc/hosts; then
+      if grep -q "platform-app.example.com" $TEMP_HOSTS; then
         sudo sed -i "s/.*platform-app.example.com/$IP_ADDRESS platform-app.example.com/" $TEMP_HOSTS
         echo "Updated entry for platform-app.example.com"
       else
