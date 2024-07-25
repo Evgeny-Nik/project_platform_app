@@ -31,6 +31,39 @@ while true; do
     echo "Error fetching ingress status: $STATUS"
   elif [ -n "$STATUS" ]; then
     echo "Ingress is ready: $STATUS"
+    # Perform a curl to the STATUS and extract the IP address
+    CURL_OUTPUT=$(curl -v $STATUS 2>&1)
+    IP_ADDRESS=$(echo "$CURL_OUTPUT" | grep -oP 'Connected to [^ ]+ \(\K[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+
+    if [[ $IP_ADDRESS =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+      echo "Extracted IP address from curl: $IP_ADDRESS"
+      # Edit /etc/hosts file
+      TEMP_HOSTS=$(mktemp)
+      sudo cp /etc/hosts $TEMP_HOSTS
+
+      # Update or add entries for argocd.example.com and platform-app.example.com
+      if grep -q "argocd.example.com" /etc/hosts; then
+        sudo sed -i "s/.*argocd.example.com/$IP_ADDRESS argocd.example.com/" $TEMP_HOSTS
+        echo "Updated entry for argocd.example.com"
+      else
+        echo "$IP_ADDRESS argocd.example.com" | sudo tee -a $TEMP_HOSTS > /dev/null
+        echo "Added entry for argocd.example.com"
+      fi
+
+      if grep -q "platform-app.example.com" /etc/hosts; then
+        sudo sed -i "s/.*platform-app.example.com/$IP_ADDRESS platform-app.example.com/" $TEMP_HOSTS
+        echo "Updated entry for platform-app.example.com"
+      else
+        echo "$IP_ADDRESS platform-app.example.com" | sudo tee -a $TEMP_HOSTS > /dev/null
+        echo "Added entry for platform-app.example.com"
+      fi
+
+      sudo cp $TEMP_HOSTS /etc/hosts
+      sudo rm $TEMP_HOSTS
+    else
+      echo "Failed to extract a valid IP address from curl output"
+    fi
+
     # If namespace is argocd, fetch the admin secret
     if [ "$NAMESPACE" == "argocd" ]; then
       echo "Fetching ArgoCD admin password..."
