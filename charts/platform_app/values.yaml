@@ -31,7 +31,7 @@ deployment:
 
 service:
   name: http
-  port: 8000
+  port: 80
   protocol: TCP
   targetPort: 8000
   type: ClusterIP
@@ -41,11 +41,12 @@ ingress:
   host: evg-platform-app.com
   path: /
   pathType: Prefix
-  tls: tls
   alb:
     scheme: internet-facing
     targetType: ip
+    certificateArn: ""
+    listenPorts: '[{"HTTP": 80}, {"HTTPS":443}]'
+    ssl-redirect: "443"
     groupName: dev-team
-    ssl-redirect: "true"
 
 kubernetesClusterDomain: cluster.local
