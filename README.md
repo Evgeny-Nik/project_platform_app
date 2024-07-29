@@ -79,9 +79,12 @@ The `.env` file in your `platform_app` directory should have the following examp
     SESSION_KEY="<session_secret_key>"
     HELM_CHART="<path_or_url_to_helm_chart>"
     KUBECONFIG="<path_to_.kube/config>"
+    REDIS_HOST_URL='<your_redis_host_url>'
+    REDIS_HOST_PORT='<port_num_your_redis_is_exposed_at>'
+    REDIS_HOST_PASSWORD='<your_redis_password>'
     ```
     
-*KUBECONFIG env var is only required when the app is deployed outside of kubrnetes.
+*KUBECONFIG env var is only required when the app is deployed out of kubernetes.
 
 3. **Trigger the workflow to build the app**:
    - Push changes to the `main` branch.
@@ -156,7 +159,7 @@ To incorporate Slack notifications for your GitHub Actions pipeline do the follo
 
 - [ ] Fully integrate flask sessions: add user login/logout, support for multiple pods/gunicorn workers. 
 - [ ] Create tests.
-- [ ] Integrate HTTPS support for the platform app via Let's Encrypt.
+- [x] Integrate HTTPS support for the platform app via Let's Encrypt.
 
 ## Links
 - [platform_app README](platform_app/README.md)
