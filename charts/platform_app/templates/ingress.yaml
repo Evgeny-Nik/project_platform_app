@@ -10,7 +10,7 @@ metadata:
     alb.ingress.kubernetes.io/target-type: {{ .Values.ingress.alb.targetType }}
     alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.alb.certificateArn }}
     alb.ingress.kubernetes.io/listen-ports: {{ .Values.ingress.alb.listenPorts }}
-    alb.ingress.kubernetes.io/ssl-redirect: {{ .Values.ingress.alb.ssl-redirect }}
+    alb.ingress.kubernetes.io/ssl-redirect: {{ .Values.ingress.alb.sslRedirect }}
     alb.ingress.kubernetes.io/group.name: {{ .Values.ingress.alb.groupName }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}

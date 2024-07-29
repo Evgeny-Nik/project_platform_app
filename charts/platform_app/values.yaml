@@ -46,7 +46,7 @@ ingress:
     targetType: ip
     certificateArn: ""
     listenPorts: '[{"HTTP": 80}, {"HTTPS":443}]'
-    ssl-redirect: "443"
+    sslRedirect: "443"
     groupName: dev-team
 
 kubernetesClusterDomain: cluster.local
