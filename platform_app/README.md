@@ -184,6 +184,6 @@ To run the app using Docker:
 ## To Do List
 
 - [ ] Add web application tests
-- [ ] Integrate HTTPS support for the platform app via Let's Encrypt.
+- [x] Integrate HTTPS support for the platform app via Let's Encrypt. (executed on k8s via aws acm and external-dns)
 - [ ] Set up history, logging and monitoring functions (MongoDB, Elastik Stack, Prometheu/Loki + Grafana)
 - [ ] Fully integrate flask sessions: add user login/logout, support for multiple pods/gunicorn workers.
