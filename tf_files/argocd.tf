@@ -26,7 +26,6 @@ resource "helm_release" "argocd" {
 
   depends_on = [
     kubernetes_namespace.argocd,
-    time_sleep.wait_for_cert_arn_secret,
     time_sleep.wait_for_load_balancer_controller
   ]
 }
