@@ -7,7 +7,7 @@ module "aws_load_balancer_controller_irsa_role" {
   attach_load_balancer_controller_policy = true
 
   oidc_providers = {
-    ex = {
+    eks = {
       provider_arn               = module.eks.oidc_provider_arn
       namespace_service_accounts = ["kube-system:aws-load-balancer-controller"]
     }
@@ -23,7 +23,7 @@ resource "helm_release" "aws_load_balancer_controller" {
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
-  version    = "1.7.2"
+  version    = var.alb_ingress
 
   set {
     name  = "replicaCount"
