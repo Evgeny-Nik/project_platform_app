@@ -73,10 +73,10 @@ def deploy():
     flash(message)
     logger.info(f"KUBERNETES_SERVICE_HOST in OS_ENV: {'KUBERNETES_SERVICE_HOST' in OS_ENV}")
     # Make an internal POST request to /describe with namespace data
-    if "KUBERNETES_SERVICE_HOST" in OS_ENV:
-        describe_url = f"http://{SELF_K8S_SERVICE_DNS}:8000/describe"
-    else:
-        describe_url = url_for('describe_kubernetes', _external=True)
+    # if "KUBERNETES_SERVICE_HOST" in OS_ENV:
+    #     describe_url = f"https://{SELF_K8S_SERVICE_DNS}:8000/describe"
+    # else:
+    describe_url = url_for('describe_kubernetes', _external=True)
     logger.info(f"describe_url: {describe_url}")
     response = requests.post(describe_url, data={'namespace': namespace, 'message': message})
 
