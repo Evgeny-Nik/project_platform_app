@@ -20,7 +20,7 @@ clusterRoleBinding:
 
 deployment:
   name: platform-app
-  replicas: 1
+  replicas: 2
   appLabel: plaform-app
   imagePullPolicy: IfNotPresent
   container:
