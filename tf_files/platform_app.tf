@@ -23,6 +23,8 @@ spec:
     path: charts/platform_app
     targetRevision: HEAD
     helm:
+      valueFiles:
+        - values.yaml
       parameters:
         - name: ingress.alb.certificateArn
           value: ${module.cert.arn}
