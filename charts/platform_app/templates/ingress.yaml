@@ -18,8 +18,8 @@ spec:
     - host: {{ .Release.Namespace }}.{{ .Values.ingress.host }}
       http:
         paths:
-          - path: { { .Values.ingress.path } }
-            pathType: { { .Values.ingress.pathType } }
+          - path: {{ .Values.ingress.path }}
+            pathType: {{ .Values.ingress.pathType }}
             backend:
               service:
                 name: {{ .Values.deployment.name }}-service
