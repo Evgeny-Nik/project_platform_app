@@ -19,14 +19,22 @@ resource "helm_release" "argocd" {
     "${file("${path.module}/argocd.yaml")}"
   ]
 
+  set {
+    name  = "server.ingress.annotations.alb\\.ingress\\.kubernetes\\.io/certificate-arn"
+    value = module.cert.arn
+  }
+
   depends_on = [
     kubernetes_namespace.argocd,
+    time_sleep.wait_for_cert_arn_secret,
     time_sleep.wait_for_load_balancer_controller
   ]
 }
 
 resource "time_sleep" "wait_for_argocd" {
-  depends_on      = [helm_release.argocd]
+  depends_on      = [
+    helm_release.argocd
+  ]
   create_duration = var.wait_time
 }
 

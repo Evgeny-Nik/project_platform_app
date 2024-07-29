@@ -8,10 +8,36 @@ resource "kubernetes_namespace" "platform_app" {
 }
 
 resource "kubectl_manifest" "platform_app_manifest" {
-  yaml_body = file("${path.module}/platform_app.yaml")
+  yaml_body = <<YAML
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-app
+  namespace: argocd
+  labels:
+    test: "true"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Evgeny-Nik/project_platform_app
+    path: charts/platform_app
+    targetRevision: HEAD
+    helm:
+      parameters:
+        - name: ingress.alb.certificateArn
+          value: ${module.cert.arn}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: platform-app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+YAML
 
   depends_on = [
-    time_sleep.wait_for_argocd
+    time_sleep.wait_for_argocd,
+    kubernetes_namespace.platform_app
   ]
 }
 
