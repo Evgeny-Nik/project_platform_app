@@ -45,7 +45,9 @@ ingress:
     scheme: internet-facing
     targetType: ip
     certificateArn: ""
-    listenPorts: '[{"HTTP": 80}, {"HTTPS":443}]'
+    listenPorts:
+      - HTTP: 80
+      - HTTPS: 443
     sslRedirect: "443"
     groupName: dev-team
 
