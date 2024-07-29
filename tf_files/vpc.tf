@@ -3,14 +3,13 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  name   = "eks-${var.cluster_name}"
-  region = var.aws_region
-
-  vpc_cidr = var.vpc_cidr
-  azs      = slice(data.aws_availability_zones.available.names, 0, var.availability_zones_count)
+  name = "eks-${var.cluster_name}"
+  azs  = slice(data.aws_availability_zones.available.names, 0, var.availability_zones_count)
 
   tags = {
-    ManagedBy = "terraform-aws-vpc"
+    Project     = "EKS Platform-App"
+    Owner       = "Evgeny Nikolin"
+    ManagedBy   = "terraform-aws-vpc"
   }
 }
 
@@ -19,18 +18,22 @@ module "vpc" {
   # version = "~> 5.7"
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-vpc.git?ref=25322b6b6be69db6cca7f167d7b0e5327156a595"
 
-  name = local.name
-  cidr = local.vpc_cidr
+  name = "eks-${var.cluster_name}"
+  cidr = var.vpc_cidr
 
   azs             = local.azs
-  private_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k)]
-  public_subnets  = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 4)]
+  private_subnets = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k)]
+  public_subnets  = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 4)]
 
   public_subnet_tags = {
-    "kubernetes.io/role/elb" = "1"
+    "kubernetes.io/role/elb"                    = "1"
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+    Environment                                 = var.environment
   }
   private_subnet_tags = {
-    "kubernetes.io/role/internal-elb" = "1"
+    "kubernetes.io/role/internal-elb"           = "1"
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+    Environment                                 = var.environment
   }
 
   enable_dns_hostnames = true

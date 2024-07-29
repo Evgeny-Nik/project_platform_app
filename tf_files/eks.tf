@@ -4,7 +4,7 @@ module "eks" {
   source = "git::https://github.com/terraform-aws-modules/terraform-aws-eks.git?ref=afadb14e44d1cdbd852dbae815be377c4034e82a"
 
   cluster_name    = var.cluster_name
-  cluster_version = "1.29"
+  cluster_version = var.cluster_version
 
   cluster_endpoint_public_access = true
 
@@ -32,22 +32,21 @@ module "eks" {
   create_kms_key                   = false
   cluster_encryption_config        = {}
   attach_cluster_encryption_policy = false
-  ### TEST ONLY ###
 
   authentication_mode = "API_AND_CONFIG_MAP"
 
   # EKS Managed Node Group(s)
   eks_managed_node_group_defaults = {
-    instance_types = ["t3.medium"]
+    instance_types = ["${var.instance_types}"]
     disk_size      = 20
     capacity_type  = "ON_DEMAND"
   }
 
   eks_managed_node_groups = {
     eks_cluster = {
-      min_size     = 1
-      max_size     = 10
-      desired_size = 2
+      desired_size = var.desired_size
+      max_size     = var.max_size
+      min_size     = var.min_size
       iam_role_additional_policies = {
         AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
       }
