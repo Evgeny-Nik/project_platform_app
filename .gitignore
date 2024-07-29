@@ -15,6 +15,7 @@
 !.dockerignore
 !Dockerfile
 !.env-example
+https/
 .terraform
 __pycache__
 **test**
