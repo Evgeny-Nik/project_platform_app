@@ -1,21 +1,25 @@
+global:
+  domain: argocd.evg-platform-app.com
+
 configs:
   params:
     server.insecure: false
 
 server:
-  service:
-    type: LoadBalancer
   ingress:
     enabled: true
     annotations:
-      kubernetes.io/ingress.class: alb
-      alb.ingress.kubernetes.io/scheme: internet-facing
-      alb.ingress.kubernetes.io/target-type: instance
+      alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig":{ "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+      alb.ingress.kubernetes.io/ssl-redirect: '443'
+      alb.ingress.kubernetes.io/backend-protocol: HTTPS
       alb.ingress.kubernetes.io/group.name: dev-team
-      cert-manager.io/cluster-issuer: letsencrypt-dev
-    path: /*
-    pathType: ImplementationSpecific
-  tls:
-    - hosts:
-        - argocd.example.com  # Replace with your domain
-      secretName: argocd-tls-secret  # Secret name to store the certificate
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/tags: Environment=dev,Team=Cool Product,name=ALB Dev,UsedIN=EKS
+      alb.ingress.kubernetes.io/target-type: ip
+    hosts:
+      - host: argocd.evg-platform-app.com
+        paths:
+          - path: /
+            pathType: Prefix
+    ingressClassName: alb
